@@ -1,43 +1,31 @@
-// src/blogs/repositories/blogs.repository.ts
-
-import { db } from '../../db/in-memory.db';
+import { ObjectId, WithId } from 'mongodb';
+import { blogCollection } from '../../db/collections';
 import { Blog, BlogInputModel } from '../types/blog';
 
 export const blogsRepository = {
-  findAll(): Blog[] {
-    return db.blogs;
+  async findAll(): Promise<WithId<Blog>[]> {
+    return blogCollection.find().toArray();
   },
 
-  findById(id: string): Blog | null {
-    return db.blogs.find((b) => b.id === id) ?? null;
+  async findById(id: string): Promise<WithId<Blog> | null> {
+    return blogCollection.findOne({ _id: new ObjectId(id) });
   },
 
-  create(data: BlogInputModel): Blog {
-    const lastBlog = db.blogs[db.blogs.length - 1];
-    const newId = lastBlog ? Number(lastBlog.id) + 1 : 1;
-
-    const newBlog: Blog = {
-      id: String(newId),
-      ...data,
-    };
-
-    db.blogs.push(newBlog);
-    return newBlog;
+  async create(newBlog: Blog): Promise<WithId<Blog>> {
+    const insertResult = await blogCollection.insertOne(newBlog);
+    return { ...newBlog, _id: insertResult.insertedId };
   },
 
-  update(id: string, data: BlogInputModel): boolean {
-    const index = db.blogs.findIndex((b) => b.id === id);
-    if (index === -1) return false;
-
-    db.blogs[index] = { ...db.blogs[index], ...data };
-    return true;
+  async update(id: string, data: BlogInputModel): Promise<boolean> {
+    const updateResult = await blogCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: data },
+    );
+    return updateResult.matchedCount > 0;
   },
 
-  delete(id: string): boolean {
-    const index = db.blogs.findIndex((b) => b.id === id);
-    if (index === -1) return false;
-
-    db.blogs.splice(index, 1);
-    return true;
+  async delete(id: string): Promise<boolean> {
+    const deleteResult = await blogCollection.deleteOne({ _id: new ObjectId(id) });
+    return deleteResult.deletedCount > 0;
   },
 };

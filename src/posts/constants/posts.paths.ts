@@ -1,4 +1,4 @@
-export const POSTS_PATH = '/ht_02/api/posts';
+export const POSTS_PATH = '/hometask_03/api/posts';
 
 export const POSTS_ROUTES = {
   ROOT: '',

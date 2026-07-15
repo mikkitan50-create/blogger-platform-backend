@@ -1,5 +1,3 @@
-// src/posts/validation/post-input-dto.validation.ts
-
 import { body } from 'express-validator';
 import { blogsRepository } from '../../blogs/repositories/blogs.repository';
 
@@ -21,8 +19,8 @@ export const postInputDtoValidation = [
 
   body('blogId')
     .isString().withMessage('blogId must be a string')
-    .custom((value) => {
-      const blog = blogsRepository.findById(value);
+    .custom(async (value) => {
+      const blog = await blogsRepository.findById(value);
       if (!blog) {
         throw new Error('blog with this id does not exist');
       }
