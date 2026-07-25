@@ -1,11 +1,11 @@
-// src/posts/routers/posts.router.ts
-
 import { Router } from 'express';
 import { POSTS_ROUTES } from '../constants/posts.paths';
 import { idValidation } from '../../core/middlewares/validation/params-id.validation.middleware';
 import { inputValidationResultMiddleware } from '../../core/middlewares/validation/input-validation-result.middleware';
+import { paginationAndSortingValidation } from '../../core/middlewares/validation/query-pagination-sorting.validation.middleware';
 import { superAdminGuardMiddleware } from '../../auth/middlewares/super-admin-guard.middleware';
 import { postInputDtoValidation } from '../validation/post-input-dto.validation';
+import { PostSortField } from '../types/post-sort-field';
 import { getPostListHandler } from '../handlers/get-post-list.handler';
 import { getPostHandler } from '../handlers/get-post.handler';
 import { createPostHandler } from '../handlers/create-post.handler';
@@ -15,7 +15,12 @@ import { deletePostHandler } from '../handlers/delete-post.handler';
 export const postsRouter = Router({});
 
 postsRouter
-  .get(POSTS_ROUTES.ROOT, getPostListHandler)
+  .get(
+    POSTS_ROUTES.ROOT,
+    paginationAndSortingValidation(PostSortField),
+    inputValidationResultMiddleware,
+    getPostListHandler,
+  )
   .get(POSTS_ROUTES.BY_ID, idValidation, inputValidationResultMiddleware, getPostHandler)
   .post(
     POSTS_ROUTES.ROOT,

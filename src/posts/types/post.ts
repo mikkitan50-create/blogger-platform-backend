@@ -23,3 +23,10 @@ export type PostViewModel = {
   blogName: string;
   createdAt: string;
 };
+
+export type PostQueryInput = {
+  sortBy: string;
+  sortDirection: string;
+  pageNumber: number;
+  pageSize: number;
+};

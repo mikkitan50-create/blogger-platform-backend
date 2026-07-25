@@ -20,3 +20,11 @@ export type BlogViewModel = {
   createdAt: string;
   isMembership: boolean;
 };
+
+export type BlogQueryInput = {
+  searchNameTerm: string | null;
+  sortBy: string;
+  sortDirection: string;
+  pageNumber: number;
+  pageSize: number;
+};

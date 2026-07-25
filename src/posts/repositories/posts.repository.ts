@@ -1,11 +1,43 @@
-import { ObjectId, WithId } from 'mongodb';
+import { Filter, ObjectId, WithId } from 'mongodb';
 import { postCollection } from '../../db/collections';
 import { blogsRepository } from '../../blogs/repositories/blogs.repository';
-import { Post, PostInputModel } from '../types/post';
+import { Post, PostInputModel, PostQueryInput } from '../types/post';
 
 export const postsRepository = {
   async findAll(): Promise<WithId<Post>[]> {
     return postCollection.find().toArray();
+  },
+
+  async findMany(
+    queryDto: PostQueryInput,
+  ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
+    return this._findManyByFilter({}, queryDto);
+  },
+
+  async findManyByBlogId(
+    blogId: string,
+    queryDto: PostQueryInput,
+  ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
+    return this._findManyByFilter({ blogId }, queryDto);
+  },
+
+  async _findManyByFilter(
+    filter: Filter<Post>,
+    queryDto: PostQueryInput,
+  ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
+    const { sortBy, sortDirection, pageNumber, pageSize } = queryDto;
+    const skip = (pageNumber - 1) * pageSize;
+
+    const items = await postCollection
+      .find(filter)
+      .sort({ [sortBy]: sortDirection === 'asc' ? 1 : -1 })
+      .skip(skip)
+      .limit(pageSize)
+      .toArray();
+
+    const totalCount = await postCollection.countDocuments(filter);
+
+    return { items, totalCount };
   },
 
   async findById(id: string): Promise<WithId<Post> | null> {
