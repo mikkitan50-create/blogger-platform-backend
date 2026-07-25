@@ -4,7 +4,6 @@ import { SETTINGS } from '../src/settings/config';
 import { runDB } from '../src/db/mongo.db';
 
 const app = express();
-setupApp(app);
 
 let isDbConnected = false;
 
@@ -15,5 +14,7 @@ app.use(async (req, res, next) => {
   }
   next();
 });
+
+setupApp(app);
 
 export default app;

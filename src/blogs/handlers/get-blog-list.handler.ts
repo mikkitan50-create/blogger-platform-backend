@@ -24,8 +24,7 @@ export async function getBlogListHandler(req: Request, res: Response) {
     });
 
     res.status(HttpStatus.Ok_200).json(paginatedOutput);
-} catch (e) {
-    console.error('DEBUG getBlogListHandler error:', e);
+  } catch {
     res.sendStatus(HttpStatus.InternalServerError_500);
   }
 }
