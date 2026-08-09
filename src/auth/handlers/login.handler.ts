@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { HttpStatus } from '../../core/types/http-statuses';
 import { usersRepository } from '../../users/repositories/users.repository';
 import { comparePassword } from '../../users/utils/password.util';
+import { jwtService } from '../adapters/jwt.service';
 
 type LoginInputBody = {
   loginOrEmail: string;
@@ -27,7 +28,9 @@ export async function loginHandler(
       return;
     }
 
-    res.sendStatus(HttpStatus.NoContent_204);
+    const accessToken = await jwtService.createToken(user._id.toString());
+
+    res.status(HttpStatus.Ok_200).send({ accessToken });
   } catch {
     res.sendStatus(HttpStatus.InternalServerError_500);
   }

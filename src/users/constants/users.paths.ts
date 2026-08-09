@@ -1,4 +1,4 @@
-export const USERS_PATH = '/hometask_05/api/users';
+export const USERS_PATH = '/hometask_06/api/users';
 
 export const USERS_ROUTES = {
   ROOT: '',
