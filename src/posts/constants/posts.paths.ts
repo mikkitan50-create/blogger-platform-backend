@@ -1,4 +1,6 @@
-export const POSTS_PATH = '/hometask_06/api/posts';
+import { API_PREFIX } from '../../core/constants/api.paths';
+
+export const POSTS_PATH = `${API_PREFIX}/posts`;
 
 export const POSTS_ROUTES = {
   ROOT: '',

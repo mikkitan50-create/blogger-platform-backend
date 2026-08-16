@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { usersRepository } from '../repositories/users.repository';
 import { generatePasswordHash } from '../utils/password.util';
 import { UserInputModel, UserViewModel } from '../types/user';
@@ -26,6 +27,11 @@ export const usersService = {
       email: data.email,
       passwordHash,
       createdAt: new Date(),
+      emailConfirmation: {
+        confirmationCode: randomUUID(),
+        expirationDate: new Date(Date.now() + 90 * 60 * 1000),
+        isConfirmed: true,
+      },
     };
 
     const createdUser = await usersRepository.create(newUser);

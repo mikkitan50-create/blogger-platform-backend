@@ -1,4 +1,6 @@
-export const BLOGS_PATH = '/hometask_06/api/blogs';
+import { API_PREFIX } from '../../core/constants/api.paths';
+
+export const BLOGS_PATH = `${API_PREFIX}/blogs`;
 
 export const BLOGS_ROUTES = {
   ROOT: '',

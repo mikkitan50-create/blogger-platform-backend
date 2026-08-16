@@ -1,0 +1,1 @@
+export const API_PREFIX = '/hometask_07/api';

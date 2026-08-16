@@ -45,6 +45,39 @@ export const usersRepository = {
     return userCollection.findOne({ _id: new ObjectId(id) });
   },
 
+  async findByEmail(email: string): Promise<WithId<User> | null> {
+    return userCollection.findOne({ email });
+  },
+
+  async findByConfirmationCode(code: string): Promise<WithId<User> | null> {
+    return userCollection.findOne({ 'emailConfirmation.confirmationCode': code });
+  },
+
+  async updateConfirmation(id: string): Promise<boolean> {
+    const updateResult = await userCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { 'emailConfirmation.isConfirmed': true } },
+    );
+    return updateResult.modifiedCount > 0;
+  },
+
+  async updateConfirmationCode(
+    id: string,
+    code: string,
+    expirationDate: Date,
+  ): Promise<boolean> {
+    const updateResult = await userCollection.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          'emailConfirmation.confirmationCode': code,
+          'emailConfirmation.expirationDate': expirationDate,
+        },
+      },
+    );
+    return updateResult.modifiedCount > 0;
+  },
+
   async create(newUser: User): Promise<WithId<User>> {
     const insertResult = await userCollection.insertOne(newUser);
     return { ...newUser, _id: insertResult.insertedId };

@@ -17,13 +17,15 @@
     "express": "^5.2.1",
     "express-validator": "^7.3.2",
     "jsonwebtoken": "^9.0.3",
-    "mongodb": "^7.5.0"
+    "mongodb": "^7.5.0",
+    "nodemailer": "^9.0.5"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.1.1",
+    "@types/nodemailer": "^8.0.1",
     "tsx": "^4.23.0",
     "typescript": "^6.0.3"
   }
