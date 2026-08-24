@@ -3,19 +3,11 @@ import { HttpStatus } from '../../core/types/http-statuses';
 import { authService } from '../application/auth.service';
 import { resultCodeToHttpException } from '../../core/utils/result-code-to-http-exception.util';
 
-type LoginInputBody = {
-  loginOrEmail: string;
-  password: string;
-};
-
-export async function loginHandler(
-  req: Request<{}, {}, LoginInputBody>,
-  res: Response,
-) {
+export async function refreshTokenHandler(req: Request, res: Response) {
   try {
-    const { loginOrEmail, password } = req.body;
+    const oldRefreshToken = req.refreshToken as string;
 
-    const result = await authService.loginUser(loginOrEmail, password);
+    const result = await authService.refreshTokenPair(oldRefreshToken);
 
     if (result.status !== 'Success' || !result.data) {
       res.sendStatus(resultCodeToHttpException(result.status));

@@ -1,10 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { usersRepository } from '../../users/repositories/users.repository';
-import { generatePasswordHash } from '../../users/utils/password.util';
+import { generatePasswordHash, comparePassword } from '../../users/utils/password.util';
 import { UserInputModel } from '../../users/types/user';
 import { Result, ResultStatus } from '../../core/types/result.type';
 import { nodemailerService } from '../adapters/nodemailer.service';
 import { emailExamples } from '../utils/email-examples.util';
+import { jwtService } from '../adapters/jwt.service';
+import { revokedTokenRepository } from '../repositories/revoked-token.repository';
 
 const CONFIRMATION_CODE_LIFETIME_MS = 90 * 60 * 1000;
 
@@ -124,7 +126,7 @@ export const authService = {
       newExpirationDate,
     );
 
- try {
+    try {
       await nodemailerService.sendEmail(
         email,
         newConfirmationCode,
@@ -133,6 +135,100 @@ export const authService = {
     } catch (e) {
       console.error('Send email error', e);
     }
+
+    return {
+      status: ResultStatus.Success,
+      extensions: [],
+      data: null,
+    };
+  },
+
+  async loginUser(
+    loginOrEmail: string,
+    password: string,
+  ): Promise<Result<{ accessToken: string; refreshToken: string } | null>> {
+    const user = await usersRepository.findByLoginOrEmail(loginOrEmail);
+    if (!user) {
+      return {
+        status: ResultStatus.Unauthorized,
+        extensions: [{ field: null, message: 'login or password is wrong' }],
+        data: null,
+      };
+    }
+
+    const isPasswordCorrect = await comparePassword(password, user.passwordHash);
+    if (!isPasswordCorrect) {
+      return {
+        status: ResultStatus.Unauthorized,
+        extensions: [{ field: null, message: 'login or password is wrong' }],
+        data: null,
+      };
+    }
+
+    const userId = user._id.toString();
+    const accessToken = await jwtService.createAccessToken(userId);
+    const refreshToken = await jwtService.createRefreshToken(userId);
+
+    return {
+      status: ResultStatus.Success,
+      extensions: [],
+      data: { accessToken, refreshToken },
+    };
+  },
+
+  async refreshTokenPair(
+    oldRefreshToken: string,
+  ): Promise<Result<{ accessToken: string; refreshToken: string } | null>> {
+    const payload = await jwtService.verifyToken(oldRefreshToken);
+    if (!payload) {
+      return {
+        status: ResultStatus.Unauthorized,
+        extensions: [{ field: null, message: 'refresh token is invalid or expired' }],
+        data: null,
+      };
+    }
+
+    const isRevoked = await revokedTokenRepository.isRevoked(oldRefreshToken);
+    if (isRevoked) {
+      return {
+        status: ResultStatus.Unauthorized,
+        extensions: [{ field: null, message: 'refresh token is revoked' }],
+        data: null,
+      };
+    }
+
+    await revokedTokenRepository.revoke(oldRefreshToken);
+
+    const accessToken = await jwtService.createAccessToken(payload.userId);
+    const refreshToken = await jwtService.createRefreshToken(payload.userId);
+
+    return {
+      status: ResultStatus.Success,
+      extensions: [],
+      data: { accessToken, refreshToken },
+    };
+  },
+
+  async logout(refreshToken: string): Promise<Result> {
+    const payload = await jwtService.verifyToken(refreshToken);
+    if (!payload) {
+      return {
+        status: ResultStatus.Unauthorized,
+        extensions: [{ field: null, message: 'refresh token is invalid or expired' }],
+        data: null,
+      };
+    }
+
+    const isRevoked = await revokedTokenRepository.isRevoked(refreshToken);
+    if (isRevoked) {
+      return {
+        status: ResultStatus.Unauthorized,
+        extensions: [{ field: null, message: 'refresh token is revoked' }],
+        data: null,
+      };
+    }
+
+    await revokedTokenRepository.revoke(refreshToken);
 
     return {
       status: ResultStatus.Success,

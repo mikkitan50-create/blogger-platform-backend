@@ -1,3 +1,4 @@
+import cookieParser from 'cookie-parser';
 import express, { Express } from 'express';
 import { BLOGS_PATH } from './blogs/constants/blogs.paths';
 import { blogsRouter } from './blogs/routers/blogs.router';
@@ -14,6 +15,7 @@ import { commentsRouter } from './comments/routers/comments.router';
 
 export const setupApp = (app: Express) => {
   app.use(express.json());
+  app.use(cookieParser());
 
   app.get('/', (req, res) => {
     res.status(200).send('Hello world!');

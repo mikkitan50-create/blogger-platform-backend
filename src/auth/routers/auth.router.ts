@@ -11,6 +11,9 @@ import { registrationHandler } from '../handlers/registration.handler';
 import { registrationConfirmationHandler } from '../handlers/registration-confirmation.handler';
 import { registrationEmailResendingHandler } from '../handlers/registration-email-resending.handler';
 import { accessTokenGuardMiddleware } from '../middlewares/access-token-guard.middleware';
+import { refreshTokenGuardMiddleware } from '../middlewares/refresh-token-guard.middleware';
+import { refreshTokenHandler } from '../handlers/refresh-token.handler';
+import { logoutHandler } from '../handlers/logout.handler';
 
 export const authRouter = Router({});
 
@@ -46,4 +49,17 @@ authRouter.get(
   AUTH_ROUTES.ME,
   accessTokenGuardMiddleware,
   getMeHandler,
+);
+
+
+authRouter.post(
+  AUTH_ROUTES.REFRESH_TOKEN,
+  refreshTokenGuardMiddleware,
+  refreshTokenHandler,
+);
+
+authRouter.post(
+  AUTH_ROUTES.LOGOUT,
+  refreshTokenGuardMiddleware,
+  logoutHandler,
 );
