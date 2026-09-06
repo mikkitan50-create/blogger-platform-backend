@@ -14,11 +14,13 @@ import { accessTokenGuardMiddleware } from '../middlewares/access-token-guard.mi
 import { refreshTokenGuardMiddleware } from '../middlewares/refresh-token-guard.middleware';
 import { refreshTokenHandler } from '../handlers/refresh-token.handler';
 import { logoutHandler } from '../handlers/logout.handler';
+import { rateLimitMiddleware } from '../../rate-limit/middlewares/rate-limit.middleware';
 
 export const authRouter = Router({});
 
 authRouter.post(
   AUTH_ROUTES.LOGIN,
+  rateLimitMiddleware,
   loginInputDtoValidation,
   inputValidationResultMiddleware,
   loginHandler,
@@ -26,6 +28,7 @@ authRouter.post(
 
 authRouter.post(
   AUTH_ROUTES.REGISTRATION,
+  rateLimitMiddleware,
   userInputDtoValidation,
   inputValidationResultMiddleware,
   registrationHandler,
@@ -33,6 +36,7 @@ authRouter.post(
 
 authRouter.post(
   AUTH_ROUTES.REGISTRATION_CONFIRMATION,
+  rateLimitMiddleware,
   registrationConfirmationCodeValidation,
   inputValidationResultMiddleware,
   registrationConfirmationHandler,
@@ -40,6 +44,7 @@ authRouter.post(
 
 authRouter.post(
   AUTH_ROUTES.REGISTRATION_EMAIL_RESENDING,
+  rateLimitMiddleware,
   registrationEmailResendingValidation,
   inputValidationResultMiddleware,
   registrationEmailResendingHandler,
@@ -50,7 +55,6 @@ authRouter.get(
   accessTokenGuardMiddleware,
   getMeHandler,
 );
-
 
 authRouter.post(
   AUTH_ROUTES.REFRESH_TOKEN,

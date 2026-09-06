@@ -11,6 +11,8 @@ export const resultCodeToHttpException = (resultCode: ResultStatus): number => {
       return HttpStatus.NotFound_404;
     case ResultStatus.Unauthorized:
       return HttpStatus.Unauthorized_401;
+    case ResultStatus.TooManyRequests:
+      return HttpStatus.TooManyRequests_429;
     default:
       return HttpStatus.InternalServerError_500;
   }

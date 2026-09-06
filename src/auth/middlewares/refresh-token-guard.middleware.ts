@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { HttpStatus } from '../../core/types/http-statuses';
 import { jwtService } from '../adapters/jwt.service';
-import { revokedTokenRepository } from '../repositories/revoked-token.repository';
+import { deviceSessionsRepository } from '../../security-devices/repositories/device-sessions.repository';
 
 export async function refreshTokenGuardMiddleware(
   req: Request,
@@ -16,19 +16,20 @@ export async function refreshTokenGuardMiddleware(
   }
 
   const payload = await jwtService.verifyToken(refreshToken);
-  if (!payload) {
+  if (!payload || !payload.deviceId) {
     res.sendStatus(HttpStatus.Unauthorized_401);
     return;
   }
 
-  const isRevoked = await revokedTokenRepository.isRevoked(refreshToken);
-  if (isRevoked) {
+  const session = await deviceSessionsRepository.findByDeviceId(payload.deviceId);
+  if (!session || session.iat.getTime() !== payload.iat.getTime()) {
     res.sendStatus(HttpStatus.Unauthorized_401);
     return;
   }
 
   req.refreshToken = refreshToken;
   req.userId = payload.userId;
+  req.deviceId = payload.deviceId;
 
   next();
 }

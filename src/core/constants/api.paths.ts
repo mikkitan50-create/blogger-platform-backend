@@ -1,1 +1,1 @@
-export const API_PREFIX = '/hometask_08/api';
+export const API_PREFIX = '/hometask_09/api';

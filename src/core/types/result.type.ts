@@ -4,6 +4,7 @@ export enum ResultStatus {
   Forbidden = 'Forbidden',
   Unauthorized = 'Unauthorized',
   BadRequest = 'BadRequest',
+  TooManyRequests = 'TooManyRequests',
 }
 
 type ExtensionType = { field: string | null; message: string };

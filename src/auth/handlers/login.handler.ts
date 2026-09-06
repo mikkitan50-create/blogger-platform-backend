@@ -15,7 +15,12 @@ export async function loginHandler(
   try {
     const { loginOrEmail, password } = req.body;
 
-    const result = await authService.loginUser(loginOrEmail, password);
+    const result = await authService.loginUser(
+      loginOrEmail,
+      password,
+      req.ip || 'unknown',
+      req.headers['user-agent'],
+    );
 
     if (result.status !== 'Success' || !result.data) {
       res.sendStatus(resultCodeToHttpException(result.status));

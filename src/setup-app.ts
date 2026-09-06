@@ -12,6 +12,8 @@ import { AUTH_PATH } from './auth/constants/auth.paths';
 import { authRouter } from './auth/routers/auth.router';
 import { COMMENTS_PATH } from './comments/constants/comments.paths';
 import { commentsRouter } from './comments/routers/comments.router';
+import { SECURITY_DEVICES_PATH } from './security-devices/constants/security-devices.paths';
+import { securityDevicesRouter } from './security-devices/routers/security-devices.router';
 
 export const setupApp = (app: Express) => {
   app.use(express.json());
@@ -27,6 +29,7 @@ export const setupApp = (app: Express) => {
   app.use(USERS_PATH, usersRouter);
   app.use(AUTH_PATH, authRouter);
   app.use(COMMENTS_PATH, commentsRouter);
+  app.use(SECURITY_DEVICES_PATH, securityDevicesRouter);
 
   return app;
 };

@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import jwt from 'jsonwebtoken';
 import { usersRepository } from '../../users/repositories/users.repository';
 import { generatePasswordHash, comparePassword } from '../../users/utils/password.util';
 import { UserInputModel } from '../../users/types/user';
@@ -6,9 +7,18 @@ import { Result, ResultStatus } from '../../core/types/result.type';
 import { nodemailerService } from '../adapters/nodemailer.service';
 import { emailExamples } from '../utils/email-examples.util';
 import { jwtService } from '../adapters/jwt.service';
-import { revokedTokenRepository } from '../repositories/revoked-token.repository';
+import { deviceSessionsRepository } from '../../security-devices/repositories/device-sessions.repository';
 
 const CONFIRMATION_CODE_LIFETIME_MS = 90 * 60 * 1000;
+const DEFAULT_DEVICE_TITLE = 'unknown device';
+
+function getTokenIatAndExp(token: string): { iat: Date; exp: Date } {
+  const decoded = jwt.decode(token) as { iat: number; exp: number };
+  return {
+    iat: new Date(decoded.iat * 1000),
+    exp: new Date(decoded.exp * 1000),
+  };
+}
 
 export const authService = {
   async registerUser(dto: UserInputModel): Promise<Result> {
@@ -47,15 +57,9 @@ export const authService = {
 
     await usersRepository.create(newUser);
 
-    try {
-      await nodemailerService.sendEmail(
-        dto.email,
-        confirmationCode,
-        emailExamples.registrationEmail,
-      );
-    } catch (e) {
-      console.error('Send email error', e);
-    }
+    nodemailerService
+      .sendEmail(dto.email, confirmationCode, emailExamples.registrationEmail)
+      .catch((e) => console.error('Send email error', e));
 
     return {
       status: ResultStatus.Success,
@@ -126,15 +130,9 @@ export const authService = {
       newExpirationDate,
     );
 
-    try {
-      await nodemailerService.sendEmail(
-        email,
-        newConfirmationCode,
-        emailExamples.registrationEmail,
-      );
-    } catch (e) {
-      console.error('Send email error', e);
-    }
+    nodemailerService
+      .sendEmail(email, newConfirmationCode, emailExamples.registrationEmail)
+      .catch((e) => console.error('Send email error', e));
 
     return {
       status: ResultStatus.Success,
@@ -146,6 +144,8 @@ export const authService = {
   async loginUser(
     loginOrEmail: string,
     password: string,
+    ip: string,
+    userAgent: string | undefined,
   ): Promise<Result<{ accessToken: string; refreshToken: string } | null>> {
     const user = await usersRepository.findByLoginOrEmail(loginOrEmail);
     if (!user) {
@@ -166,8 +166,21 @@ export const authService = {
     }
 
     const userId = user._id.toString();
+    const deviceId = randomUUID();
+
     const accessToken = await jwtService.createAccessToken(userId);
-    const refreshToken = await jwtService.createRefreshToken(userId);
+    const refreshToken = await jwtService.createRefreshToken(userId, deviceId);
+
+    const { iat, exp } = getTokenIatAndExp(refreshToken);
+
+    await deviceSessionsRepository.create({
+      userId,
+      deviceId,
+      ip,
+      title: userAgent || DEFAULT_DEVICE_TITLE,
+      iat,
+      exp,
+    });
 
     return {
       status: ResultStatus.Success,
@@ -180,7 +193,7 @@ export const authService = {
     oldRefreshToken: string,
   ): Promise<Result<{ accessToken: string; refreshToken: string } | null>> {
     const payload = await jwtService.verifyToken(oldRefreshToken);
-    if (!payload) {
+    if (!payload || !payload.deviceId) {
       return {
         status: ResultStatus.Unauthorized,
         extensions: [{ field: null, message: 'refresh token is invalid or expired' }],
@@ -188,8 +201,8 @@ export const authService = {
       };
     }
 
-    const isRevoked = await revokedTokenRepository.isRevoked(oldRefreshToken);
-    if (isRevoked) {
+    const session = await deviceSessionsRepository.findByDeviceId(payload.deviceId);
+    if (!session || session.iat.getTime() !== payload.iat.getTime()) {
       return {
         status: ResultStatus.Unauthorized,
         extensions: [{ field: null, message: 'refresh token is revoked' }],
@@ -197,10 +210,12 @@ export const authService = {
       };
     }
 
-    await revokedTokenRepository.revoke(oldRefreshToken);
-
     const accessToken = await jwtService.createAccessToken(payload.userId);
-    const refreshToken = await jwtService.createRefreshToken(payload.userId);
+    const refreshToken = await jwtService.createRefreshToken(payload.userId, payload.deviceId);
+
+    const { iat: newIat, exp: newExp } = getTokenIatAndExp(refreshToken);
+
+    await deviceSessionsRepository.updateIatAndExp(payload.deviceId, newIat, newExp);
 
     return {
       status: ResultStatus.Success,
@@ -211,7 +226,7 @@ export const authService = {
 
   async logout(refreshToken: string): Promise<Result> {
     const payload = await jwtService.verifyToken(refreshToken);
-    if (!payload) {
+    if (!payload || !payload.deviceId) {
       return {
         status: ResultStatus.Unauthorized,
         extensions: [{ field: null, message: 'refresh token is invalid or expired' }],
@@ -219,8 +234,8 @@ export const authService = {
       };
     }
 
-    const isRevoked = await revokedTokenRepository.isRevoked(refreshToken);
-    if (isRevoked) {
+    const session = await deviceSessionsRepository.findByDeviceId(payload.deviceId);
+    if (!session || session.iat.getTime() !== payload.iat.getTime()) {
       return {
         status: ResultStatus.Unauthorized,
         extensions: [{ field: null, message: 'refresh token is revoked' }],
@@ -228,7 +243,7 @@ export const authService = {
       };
     }
 
-    await revokedTokenRepository.revoke(refreshToken);
+    await deviceSessionsRepository.deleteByDeviceId(payload.deviceId);
 
     return {
       status: ResultStatus.Success,
