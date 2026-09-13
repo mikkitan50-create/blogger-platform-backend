@@ -5,6 +5,8 @@ import { loginInputDtoValidation } from '../validation/login-input-dto.validatio
 import { userInputDtoValidation } from '../../users/validation/user-input-dto.validation';
 import { registrationConfirmationCodeValidation } from '../validation/registration-confirmation-code.validation';
 import { registrationEmailResendingValidation } from '../validation/registration-email-resending.validation';
+import { passwordRecoveryInputDtoValidation } from '../validation/password-recovery-input-dto.validation';
+import { newPasswordRecoveryInputDtoValidation } from '../validation/new-password-recovery-input-dto.validation';
 import { loginHandler } from '../handlers/login.handler';
 import { getMeHandler } from '../handlers/get-me.handler';
 import { registrationHandler } from '../handlers/registration.handler';
@@ -15,6 +17,7 @@ import { refreshTokenGuardMiddleware } from '../middlewares/refresh-token-guard.
 import { refreshTokenHandler } from '../handlers/refresh-token.handler';
 import { logoutHandler } from '../handlers/logout.handler';
 import { rateLimitMiddleware } from '../../rate-limit/middlewares/rate-limit.middleware';
+import { passwordRecoveryController } from '../controllers/password-recovery.controller';
 
 export const authRouter = Router({});
 
@@ -48,6 +51,22 @@ authRouter.post(
   registrationEmailResendingValidation,
   inputValidationResultMiddleware,
   registrationEmailResendingHandler,
+);
+
+authRouter.post(
+  AUTH_ROUTES.PASSWORD_RECOVERY,
+  rateLimitMiddleware,
+  passwordRecoveryInputDtoValidation,
+  inputValidationResultMiddleware,
+  passwordRecoveryController.passwordRecovery,
+);
+
+authRouter.post(
+  AUTH_ROUTES.NEW_PASSWORD,
+  rateLimitMiddleware,
+  newPasswordRecoveryInputDtoValidation,
+  inputValidationResultMiddleware,
+  passwordRecoveryController.newPassword,
 );
 
 authRouter.get(

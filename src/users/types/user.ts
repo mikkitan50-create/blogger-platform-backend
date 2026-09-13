@@ -1,3 +1,8 @@
+export type PasswordRecovery = {
+  recoveryCode: string;
+  expirationDate: Date;
+} | null;
+
 export type EmailConfirmation = {
   confirmationCode: string;
   expirationDate: Date;
@@ -10,6 +15,7 @@ export type User = {
   passwordHash: string;
   createdAt: Date;
   emailConfirmation: EmailConfirmation;
+  passwordRecovery: PasswordRecovery;
 };
 
 export type UserInputModel = {

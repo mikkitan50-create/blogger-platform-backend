@@ -16,6 +16,7 @@ export const EMAIL_USER = env.EMAIL_USER || '';
 export const EMAIL_PASS = env.EMAIL_PASS || '';
 export const EMAIL_FROM = env.EMAIL_FROM || 'Blogger Platform <noreply@example.com>';
 export const CONFIRM_EMAIL_URL = env.CONFIRM_EMAIL_URL || 'https://somesite.com/confirm-email';
+export const PASSWORD_RECOVERY_URL = env.PASSWORD_RECOVERY_URL || 'https://somesite.com/password-recovery';
 
 export const SETTINGS = {
   PORT: env.PORT || 3000,

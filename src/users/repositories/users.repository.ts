@@ -53,6 +53,10 @@ export const usersRepository = {
     return userCollection.findOne({ 'emailConfirmation.confirmationCode': code });
   },
 
+  async findByRecoveryCode(code: string): Promise<WithId<User> | null> {
+    return userCollection.findOne({ 'passwordRecovery.recoveryCode': code });
+  },
+
   async updateConfirmation(id: string): Promise<boolean> {
     const updateResult = await userCollection.updateOne(
       { _id: new ObjectId(id) },
@@ -73,6 +77,33 @@ export const usersRepository = {
           'emailConfirmation.confirmationCode': code,
           'emailConfirmation.expirationDate': expirationDate,
         },
+      },
+    );
+    return updateResult.modifiedCount > 0;
+  },
+
+  async setRecoveryCode(
+    id: string,
+    code: string,
+    expirationDate: Date,
+  ): Promise<boolean> {
+    const updateResult = await userCollection.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          passwordRecovery: { recoveryCode: code, expirationDate },
+        },
+      },
+    );
+    return updateResult.modifiedCount > 0;
+  },
+
+  async updatePassword(id: string, passwordHash: string): Promise<boolean> {
+    const updateResult = await userCollection.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: { passwordHash },
+        $unset: { passwordRecovery: '' },
       },
     );
     return updateResult.modifiedCount > 0;

@@ -14,11 +14,12 @@ export const nodemailerService = {
     email: string,
     code: string,
     template: (code: string) => string,
+    subject: string = 'Registration confirmation',
   ): Promise<void> {
     await transporter.sendMail({
       from: EMAIL_FROM,
       to: email,
-      subject: 'Registration confirmation',
+      subject,
       html: template(code),
     });
   },
