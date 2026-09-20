@@ -10,13 +10,13 @@ import { postInputDtoValidation } from '../validation/post-input-dto.validation'
 import { commentInputDtoValidation } from '../../comments/validation/comment-input-dto.validation';
 import { PostSortField } from '../types/post-sort-field';
 import { CommentSortField } from '../../comments/types/comment-sort-field';
-import { getPostListHandler } from '../handlers/get-post-list.handler';
-import { getPostHandler } from '../handlers/get-post.handler';
-import { createPostHandler } from '../handlers/create-post.handler';
-import { updatePostHandler } from '../handlers/update-post.handler';
-import { deletePostHandler } from '../handlers/delete-post.handler';
-import { getCommentsForPostHandler } from '../../comments/handlers/get-comments-for-post.handler';
-import { createCommentForPostHandler } from '../../comments/handlers/create-comment-for-post.handler';
+import { container } from '../../composition/composition-root';
+import { TYPES } from '../../composition/types';
+import { PostsController } from '../controllers/posts.controller';
+import { CommentsController } from '../../comments/controllers/comments.controller';
+
+const postsController = container.get<PostsController>(TYPES.PostsController);
+const commentsController = container.get<CommentsController>(TYPES.CommentsController);
 
 export const postsRouter = Router({});
 
@@ -25,22 +25,22 @@ postsRouter
     POSTS_ROUTES.ROOT,
     paginationAndSortingValidation(PostSortField),
     inputValidationResultMiddleware,
-    getPostListHandler,
+    postsController.getPostList,
   )
-  .get(POSTS_ROUTES.BY_ID, idValidation, inputValidationResultMiddleware, getPostHandler)
+  .get(POSTS_ROUTES.BY_ID, idValidation, inputValidationResultMiddleware, postsController.getPost)
   .get(
     POSTS_ROUTES.COMMENTS_BY_POST_ID,
     postIdParamValidation,
     paginationAndSortingValidation(CommentSortField),
     inputValidationResultMiddleware,
-    getCommentsForPostHandler,
+    commentsController.getCommentsForPost,
   )
   .post(
     POSTS_ROUTES.ROOT,
     superAdminGuardMiddleware,
     postInputDtoValidation,
     inputValidationResultMiddleware,
-    createPostHandler,
+    postsController.createPost,
   )
   .post(
     POSTS_ROUTES.COMMENTS_BY_POST_ID,
@@ -48,7 +48,7 @@ postsRouter
     postIdParamValidation,
     commentInputDtoValidation,
     inputValidationResultMiddleware,
-    createCommentForPostHandler,
+    commentsController.createCommentForPost,
   )
   .put(
     POSTS_ROUTES.BY_ID,
@@ -56,12 +56,12 @@ postsRouter
     idValidation,
     postInputDtoValidation,
     inputValidationResultMiddleware,
-    updatePostHandler,
+    postsController.updatePost,
   )
   .delete(
     POSTS_ROUTES.BY_ID,
     superAdminGuardMiddleware,
     idValidation,
     inputValidationResultMiddleware,
-    deletePostHandler,
+    postsController.deletePost,
   );

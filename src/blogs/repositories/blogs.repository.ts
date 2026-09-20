@@ -1,7 +1,9 @@
+import { injectable } from 'inversify';
 import { Filter, ObjectId, WithId } from 'mongodb';
 import { blogCollection } from '../../db/collections';
 import { Blog, BlogInputModel, BlogQueryInput } from '../types/blog';
 
+@injectable()
 export class BlogsRepository {
   async findAll(): Promise<WithId<Blog>[]> {
     return blogCollection.find().toArray();

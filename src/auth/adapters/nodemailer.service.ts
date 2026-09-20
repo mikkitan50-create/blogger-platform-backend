@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import nodemailer from 'nodemailer';
 import { EMAIL_USER, EMAIL_PASS, EMAIL_FROM } from '../../settings/config';
 
@@ -9,7 +10,8 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const nodemailerService = {
+@injectable()
+export class NodemailerService {
   async sendEmail(
     email: string,
     code: string,
@@ -22,5 +24,7 @@ export const nodemailerService = {
       subject,
       html: template(code),
     });
-  },
-};
+  }
+}
+
+export const nodemailerService = new NodemailerService();

@@ -7,9 +7,11 @@ import { superAdminGuardMiddleware } from '../../auth/middlewares/super-admin-gu
 import { userInputDtoValidation } from '../validation/user-input-dto.validation';
 import { searchLoginTermValidation, searchEmailTermValidation } from '../validation/search-users-term.validation';
 import { UserSortField } from '../types/user-sort-field';
-import { getUserListHandler } from '../handlers/get-user-list.handler';
-import { createUserHandler } from '../handlers/create-user.handler';
-import { deleteUserHandler } from '../handlers/delete-user.handler';
+import { container } from '../../composition/composition-root';
+import { TYPES } from '../../composition/types';
+import { UsersController } from '../controllers/users.controller';
+
+const usersController = container.get<UsersController>(TYPES.UsersController);
 
 export const usersRouter = Router({});
 
@@ -21,19 +23,19 @@ usersRouter
     searchLoginTermValidation,
     searchEmailTermValidation,
     inputValidationResultMiddleware,
-    getUserListHandler,
+    usersController.getUserList,
   )
   .post(
     USERS_ROUTES.ROOT,
     superAdminGuardMiddleware,
     userInputDtoValidation,
     inputValidationResultMiddleware,
-    createUserHandler,
+    usersController.createUser,
   )
   .delete(
     USERS_ROUTES.BY_ID,
     superAdminGuardMiddleware,
     idValidation,
     inputValidationResultMiddleware,
-    deleteUserHandler,
+    usersController.deleteUser,
   );

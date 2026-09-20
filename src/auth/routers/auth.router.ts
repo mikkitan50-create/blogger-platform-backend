@@ -7,17 +7,16 @@ import { registrationConfirmationCodeValidation } from '../validation/registrati
 import { registrationEmailResendingValidation } from '../validation/registration-email-resending.validation';
 import { passwordRecoveryInputDtoValidation } from '../validation/password-recovery-input-dto.validation';
 import { newPasswordRecoveryInputDtoValidation } from '../validation/new-password-recovery-input-dto.validation';
-import { loginHandler } from '../handlers/login.handler';
-import { getMeHandler } from '../handlers/get-me.handler';
-import { registrationHandler } from '../handlers/registration.handler';
-import { registrationConfirmationHandler } from '../handlers/registration-confirmation.handler';
-import { registrationEmailResendingHandler } from '../handlers/registration-email-resending.handler';
 import { accessTokenGuardMiddleware } from '../middlewares/access-token-guard.middleware';
 import { refreshTokenGuardMiddleware } from '../middlewares/refresh-token-guard.middleware';
-import { refreshTokenHandler } from '../handlers/refresh-token.handler';
-import { logoutHandler } from '../handlers/logout.handler';
 import { rateLimitMiddleware } from '../../rate-limit/middlewares/rate-limit.middleware';
-import { passwordRecoveryController } from '../controllers/password-recovery.controller';
+import { container } from '../../composition/composition-root';
+import { TYPES } from '../../composition/types';
+import { AuthController } from '../controllers/auth.controller';
+import { PasswordRecoveryController } from '../controllers/password-recovery.controller';
+
+const authController = container.get<AuthController>(TYPES.AuthController);
+const passwordRecoveryController = container.get<PasswordRecoveryController>(TYPES.PasswordRecoveryController);
 
 export const authRouter = Router({});
 
@@ -26,7 +25,7 @@ authRouter.post(
   rateLimitMiddleware,
   loginInputDtoValidation,
   inputValidationResultMiddleware,
-  loginHandler,
+  authController.login,
 );
 
 authRouter.post(
@@ -34,7 +33,7 @@ authRouter.post(
   rateLimitMiddleware,
   userInputDtoValidation,
   inputValidationResultMiddleware,
-  registrationHandler,
+  authController.registration,
 );
 
 authRouter.post(
@@ -42,7 +41,7 @@ authRouter.post(
   rateLimitMiddleware,
   registrationConfirmationCodeValidation,
   inputValidationResultMiddleware,
-  registrationConfirmationHandler,
+  authController.registrationConfirmation,
 );
 
 authRouter.post(
@@ -50,7 +49,7 @@ authRouter.post(
   rateLimitMiddleware,
   registrationEmailResendingValidation,
   inputValidationResultMiddleware,
-  registrationEmailResendingHandler,
+  authController.registrationEmailResending,
 );
 
 authRouter.post(
@@ -72,17 +71,17 @@ authRouter.post(
 authRouter.get(
   AUTH_ROUTES.ME,
   accessTokenGuardMiddleware,
-  getMeHandler,
+  authController.getMe,
 );
 
 authRouter.post(
   AUTH_ROUTES.REFRESH_TOKEN,
   refreshTokenGuardMiddleware,
-  refreshTokenHandler,
+  authController.refreshToken,
 );
 
 authRouter.post(
   AUTH_ROUTES.LOGOUT,
   refreshTokenGuardMiddleware,
-  logoutHandler,
+  authController.logout,
 );

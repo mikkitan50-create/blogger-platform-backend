@@ -1,10 +1,15 @@
+import { inject, injectable } from 'inversify';
 import { WithId } from 'mongodb';
+import { TYPES } from '../../composition/types';
 import { BlogsRepository } from '../repositories/blogs.repository';
 import { Blog, BlogInputModel, BlogQueryInput } from '../types/blog';
 import { mapBlogInputDtoToBlog } from '../utils/map-blog-input-dto-to-blog.util';
 
+@injectable()
 export class BlogsService {
-  constructor(private blogsRepository: BlogsRepository) {}
+  constructor(
+    @inject(TYPES.BlogsRepository) private blogsRepository: BlogsRepository,
+  ) {}
 
   async getBlogList(
     queryDto: BlogQueryInput,

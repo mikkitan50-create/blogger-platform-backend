@@ -1,8 +1,10 @@
+import { injectable } from 'inversify';
 import { Filter, ObjectId, WithId } from 'mongodb';
 import { userCollection } from '../../db/collections';
 import { User, UserQueryInput } from '../types/user';
 
-export const usersRepository = {
+@injectable()
+export class UsersRepository {
   async findMany(
     queryDto: UserQueryInput,
   ): Promise<{ items: WithId<User>[]; totalCount: number }> {
@@ -33,29 +35,29 @@ export const usersRepository = {
     const totalCount = await userCollection.countDocuments(filter);
 
     return { items, totalCount };
-  },
+  }
 
   async findByLoginOrEmail(loginOrEmail: string): Promise<WithId<User> | null> {
     return userCollection.findOne({
       $or: [{ login: loginOrEmail }, { email: loginOrEmail }],
     });
-  },
+  }
 
   async findById(id: string): Promise<WithId<User> | null> {
     return userCollection.findOne({ _id: new ObjectId(id) });
-  },
+  }
 
   async findByEmail(email: string): Promise<WithId<User> | null> {
     return userCollection.findOne({ email });
-  },
+  }
 
   async findByConfirmationCode(code: string): Promise<WithId<User> | null> {
     return userCollection.findOne({ 'emailConfirmation.confirmationCode': code });
-  },
+  }
 
   async findByRecoveryCode(code: string): Promise<WithId<User> | null> {
     return userCollection.findOne({ 'passwordRecovery.recoveryCode': code });
-  },
+  }
 
   async updateConfirmation(id: string): Promise<boolean> {
     const updateResult = await userCollection.updateOne(
@@ -63,7 +65,7 @@ export const usersRepository = {
       { $set: { 'emailConfirmation.isConfirmed': true } },
     );
     return updateResult.modifiedCount > 0;
-  },
+  }
 
   async updateConfirmationCode(
     id: string,
@@ -80,7 +82,7 @@ export const usersRepository = {
       },
     );
     return updateResult.modifiedCount > 0;
-  },
+  }
 
   async setRecoveryCode(
     id: string,
@@ -96,7 +98,7 @@ export const usersRepository = {
       },
     );
     return updateResult.modifiedCount > 0;
-  },
+  }
 
   async updatePassword(id: string, passwordHash: string): Promise<boolean> {
     const updateResult = await userCollection.updateOne(
@@ -107,15 +109,17 @@ export const usersRepository = {
       },
     );
     return updateResult.modifiedCount > 0;
-  },
+  }
 
   async create(newUser: User): Promise<WithId<User>> {
     const insertResult = await userCollection.insertOne(newUser);
     return { ...newUser, _id: insertResult.insertedId };
-  },
+  }
 
   async delete(id: string): Promise<boolean> {
     const deleteResult = await userCollection.deleteOne({ _id: new ObjectId(id) });
     return deleteResult.deletedCount > 0;
-  },
-};
+  }
+}
+
+export const usersRepository = new UsersRepository();

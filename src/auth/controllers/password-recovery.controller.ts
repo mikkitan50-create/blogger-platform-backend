@@ -1,14 +1,19 @@
+import { inject, injectable } from 'inversify';
 import { Request, Response } from 'express';
 import { HttpStatus } from '../../core/types/http-statuses';
 import { ResultStatus } from '../../core/types/result.type';
 import { resultCodeToHttpException } from '../../core/utils/result-code-to-http-exception.util';
-import { passwordRecoveryService, PasswordRecoveryService } from '../application/password-recovery.service';
+import { TYPES } from '../../composition/types';
+import { PasswordRecoveryService } from '../application/password-recovery.service';
 
 type PasswordRecoveryBody = { email: string };
 type NewPasswordBody = { newPassword: string; recoveryCode: string };
 
+@injectable()
 export class PasswordRecoveryController {
-  constructor(private passwordRecoveryService: PasswordRecoveryService) {}
+  constructor(
+    @inject(TYPES.PasswordRecoveryService) private passwordRecoveryService: PasswordRecoveryService,
+  ) {}
 
   passwordRecovery = async (
     req: Request<{}, {}, PasswordRecoveryBody>,
@@ -46,5 +51,3 @@ export class PasswordRecoveryController {
     }
   };
 }
-
-export const passwordRecoveryController = new PasswordRecoveryController(passwordRecoveryService);

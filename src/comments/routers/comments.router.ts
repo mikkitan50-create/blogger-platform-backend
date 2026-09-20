@@ -4,9 +4,11 @@ import { commentIdParamValidation } from '../../core/middlewares/validation/comm
 import { inputValidationResultMiddleware } from '../../core/middlewares/validation/input-validation-result.middleware';
 import { accessTokenGuardMiddleware } from '../../auth/middlewares/access-token-guard.middleware';
 import { commentInputDtoValidation } from '../validation/comment-input-dto.validation';
-import { getCommentHandler } from '../handlers/get-comment.handler';
-import { updateCommentHandler } from '../handlers/update-comment.handler';
-import { deleteCommentHandler } from '../handlers/delete-comment.handler';
+import { container } from '../../composition/composition-root';
+import { TYPES } from '../../composition/types';
+import { CommentsController } from '../controllers/comments.controller';
+
+const commentsController = container.get<CommentsController>(TYPES.CommentsController);
 
 export const commentsRouter = Router({});
 
@@ -15,7 +17,7 @@ commentsRouter
     COMMENTS_ROUTES.BY_ID,
     commentIdParamValidation,
     inputValidationResultMiddleware,
-    getCommentHandler,
+    commentsController.getComment,
   )
   .put(
     COMMENTS_ROUTES.BY_ID,
@@ -23,12 +25,12 @@ commentsRouter
     commentIdParamValidation,
     commentInputDtoValidation,
     inputValidationResultMiddleware,
-    updateCommentHandler,
+    commentsController.updateComment,
   )
   .delete(
     COMMENTS_ROUTES.BY_ID,
     accessTokenGuardMiddleware,
     commentIdParamValidation,
     inputValidationResultMiddleware,
-    deleteCommentHandler,
+    commentsController.deleteComment,
   );

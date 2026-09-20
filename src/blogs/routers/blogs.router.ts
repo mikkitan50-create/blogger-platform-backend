@@ -10,12 +10,13 @@ import { blogInputDtoValidation } from '../validation/blog-input-dto.validation'
 import { postInputDtoForBlogValidation } from '../../posts/validation/post-input-dto-for-blog.validation';
 import { BlogSortField } from '../types/blog-sort-field';
 import { PostSortField } from '../../posts/types/post-sort-field';
-import { getPostsForBlogHandler } from '../../posts/handlers/get-posts-for-blog.handler';
-import { createPostForBlogHandler } from '../../posts/handlers/create-post-for-blog.handler';
-import { ioc } from '../../composition/composition-root';
+import { container } from '../../composition/composition-root';
+import { TYPES } from '../../composition/types';
 import { BlogsController } from '../controllers/blogs.controller';
+import { PostsController } from '../../posts/controllers/posts.controller';
 
-const blogsController = ioc.getInstance(BlogsController);
+const blogsController = container.get<BlogsController>(TYPES.BlogsController);
+const postsController = container.get<PostsController>(TYPES.PostsController);
 
 export const blogsRouter = Router({});
 
@@ -33,7 +34,7 @@ blogsRouter
     blogIdParamValidation,
     paginationAndSortingValidation(PostSortField),
     inputValidationResultMiddleware,
-    getPostsForBlogHandler,
+    postsController.getPostsForBlog,
   )
   .post(
     BLOGS_ROUTES.ROOT,
@@ -48,7 +49,7 @@ blogsRouter
     blogIdParamValidation,
     postInputDtoForBlogValidation,
     inputValidationResultMiddleware,
-    createPostForBlogHandler,
+    postsController.createPostForBlog,
   )
   .put(
     BLOGS_ROUTES.BY_ID,

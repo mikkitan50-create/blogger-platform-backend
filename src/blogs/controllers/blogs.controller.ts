@@ -1,13 +1,18 @@
+import { inject, injectable } from 'inversify';
 import { Request, Response } from 'express';
 import { matchedData } from 'express-validator';
 import { HttpStatus } from '../../core/types/http-statuses';
 import { mapToPaginatedOutput } from '../../core/utils/map-to-paginated-output.util';
+import { TYPES } from '../../composition/types';
 import { BlogsService } from '../application/blogs.service';
 import { BlogInputModel } from '../types/blog';
 import { mapToBlogViewModel } from '../utils/map-to-blog-view-model.util';
 
+@injectable()
 export class BlogsController {
-  constructor(private blogsService: BlogsService) {}
+  constructor(
+    @inject(TYPES.BlogsService) private blogsService: BlogsService,
+  ) {}
 
   getBlogList = async (req: Request, res: Response): Promise<void> => {
     try {

@@ -1,27 +1,34 @@
+import { inject, injectable } from 'inversify';
 import { Filter, ObjectId, WithId } from 'mongodb';
 import { postCollection } from '../../db/collections';
-import { blogsRepository } from '../../blogs/repositories/blogs.repository';
+import { TYPES } from '../../composition/types';
+import { BlogsRepository } from '../../blogs/repositories/blogs.repository';
 import { Post, PostInputModel, PostQueryInput } from '../types/post';
 
-export const postsRepository = {
+@injectable()
+export class PostsRepository {
+  constructor(
+    @inject(TYPES.BlogsRepository) private blogsRepository: BlogsRepository,
+  ) {}
+
   async findAll(): Promise<WithId<Post>[]> {
     return postCollection.find().toArray();
-  },
+  }
 
   async findMany(
     queryDto: PostQueryInput,
   ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
     return this._findManyByFilter({}, queryDto);
-  },
+  }
 
   async findManyByBlogId(
     blogId: string,
     queryDto: PostQueryInput,
   ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
     return this._findManyByFilter({ blogId }, queryDto);
-  },
+  }
 
-  async _findManyByFilter(
+  private async _findManyByFilter(
     filter: Filter<Post>,
     queryDto: PostQueryInput,
   ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
@@ -38,23 +45,23 @@ export const postsRepository = {
     const totalCount = await postCollection.countDocuments(filter);
 
     return { items, totalCount };
-  },
+  }
 
   async findById(id: string): Promise<WithId<Post> | null> {
     return postCollection.findOne({ _id: new ObjectId(id) });
-  },
+  }
 
   async create(data: Omit<Post, 'blogName'>): Promise<WithId<Post> | null> {
-    const blog = await blogsRepository.findById(data.blogId);
+    const blog = await this.blogsRepository.findById(data.blogId);
     if (!blog) return null;
 
     const newPost: Post = { ...data, blogName: blog.name };
     const insertResult = await postCollection.insertOne(newPost);
     return { ...newPost, _id: insertResult.insertedId };
-  },
+  }
 
   async update(id: string, data: PostInputModel): Promise<boolean> {
-    const blog = await blogsRepository.findById(data.blogId);
+    const blog = await this.blogsRepository.findById(data.blogId);
     if (!blog) return false;
 
     const updateResult = await postCollection.updateOne(
@@ -70,10 +77,10 @@ export const postsRepository = {
       },
     );
     return updateResult.matchedCount > 0;
-  },
+  }
 
   async delete(id: string): Promise<boolean> {
     const deleteResult = await postCollection.deleteOne({ _id: new ObjectId(id) });
     return deleteResult.deletedCount > 0;
-  },
-};
+  }
+}

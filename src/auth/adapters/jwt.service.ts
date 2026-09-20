@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET, ACCESS_TOKEN_EXPIRES_IN, REFRESH_TOKEN_EXPIRES_IN } from '../../settings/config';
 
@@ -7,16 +8,17 @@ export type TokenPayload = {
   iat: Date;
 };
 
-export const jwtService = {
+@injectable()
+export class JwtService {
   async createAccessToken(userId: string): Promise<string> {
     return jwt.sign({ userId }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN } as jwt.SignOptions);
-  },
+  }
 
   async createRefreshToken(userId: string, deviceId: string): Promise<string> {
     return jwt.sign({ userId, deviceId }, JWT_SECRET, {
       expiresIn: REFRESH_TOKEN_EXPIRES_IN,
     } as jwt.SignOptions);
-  },
+  }
 
   async verifyToken(token: string): Promise<TokenPayload | null> {
     try {
@@ -33,5 +35,7 @@ export const jwtService = {
     } catch (error) {
       return null;
     }
-  },
-};
+  }
+}
+
+export const jwtService = new JwtService();
