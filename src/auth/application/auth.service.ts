@@ -4,12 +4,14 @@ import jwt from 'jsonwebtoken';
 import { TYPES } from '../../composition/types';
 import { UsersRepository } from '../../users/repositories/users.repository';
 import { generatePasswordHash, comparePassword } from '../../users/utils/password.util';
-import { User, UserInputModel } from '../../users/types/user';
+import { UserInputModel } from '../../users/types/user';
+import { UserModel } from '../../users/domain/user.entity';
 import { Result, ResultStatus } from '../../core/types/result.type';
 import { NodemailerService } from '../adapters/nodemailer.service';
 import { emailExamples } from '../utils/email-examples.util';
 import { JwtService } from '../adapters/jwt.service';
 import { DeviceSessionsRepository } from '../../security-devices/repositories/device-sessions.repository';
+import { DeviceSessionModel } from '../../security-devices/domain/device-session.entity';
 
 const CONFIRMATION_CODE_LIFETIME_MS = 90 * 60 * 1000;
 const DEFAULT_DEVICE_TITLE = 'unknown device';
@@ -53,7 +55,7 @@ export class AuthService {
     const passwordHash = await generatePasswordHash(dto.password);
     const confirmationCode = randomUUID();
 
-    const newUser: User = {
+    const user = new UserModel({
       login: dto.login,
       email: dto.email,
       passwordHash,
@@ -64,9 +66,9 @@ export class AuthService {
         isConfirmed: false,
       },
       passwordRecovery: null,
-    };
+    });
 
-    await this.usersRepository.create(newUser);
+    await this.usersRepository.save(user);
 
     this.nodemailerService
       .sendEmail(dto.email, confirmationCode, emailExamples.registrationEmail)
@@ -105,7 +107,8 @@ export class AuthService {
       };
     }
 
-    await this.usersRepository.updateConfirmation(user._id.toString());
+    user.emailConfirmation.isConfirmed = true;
+    await this.usersRepository.save(user);
 
     return {
       status: ResultStatus.Success,
@@ -133,13 +136,10 @@ export class AuthService {
     }
 
     const newConfirmationCode = randomUUID();
-    const newExpirationDate = new Date(Date.now() + CONFIRMATION_CODE_LIFETIME_MS);
 
-    await this.usersRepository.updateConfirmationCode(
-      user._id.toString(),
-      newConfirmationCode,
-      newExpirationDate,
-    );
+    user.emailConfirmation.confirmationCode = newConfirmationCode;
+    user.emailConfirmation.expirationDate = new Date(Date.now() + CONFIRMATION_CODE_LIFETIME_MS);
+    await this.usersRepository.save(user);
 
     this.nodemailerService
       .sendEmail(email, newConfirmationCode, emailExamples.registrationEmail)
@@ -184,7 +184,7 @@ export class AuthService {
 
     const { iat, exp } = getTokenIatAndExp(refreshToken);
 
-    await this.deviceSessionsRepository.create({
+    const session = new DeviceSessionModel({
       userId,
       deviceId,
       ip,
@@ -192,6 +192,7 @@ export class AuthService {
       iat,
       exp,
     });
+    await this.deviceSessionsRepository.save(session);
 
     return {
       status: ResultStatus.Success,
@@ -226,7 +227,9 @@ export class AuthService {
 
     const { iat: newIat, exp: newExp } = getTokenIatAndExp(refreshToken);
 
-    await this.deviceSessionsRepository.updateIatAndExp(payload.deviceId, newIat, newExp);
+    session.iat = newIat;
+    session.exp = newExp;
+    await this.deviceSessionsRepository.save(session);
 
     return {
       status: ResultStatus.Success,

@@ -1,38 +1,27 @@
 import { injectable } from 'inversify';
-import { WithId } from 'mongodb';
-import { deviceSessionCollection } from '../../db/collections';
-import { DeviceSession } from '../types/device-session';
+import { DeviceSessionDocument, DeviceSessionModel } from '../domain/device-session.entity';
 
 @injectable()
 export class DeviceSessionsRepository {
-  async create(newSession: DeviceSession): Promise<WithId<DeviceSession>> {
-    const insertResult = await deviceSessionCollection.insertOne(newSession);
-    return { ...newSession, _id: insertResult.insertedId };
+  async findByDeviceId(deviceId: string): Promise<DeviceSessionDocument | null> {
+    return DeviceSessionModel.findOne({ deviceId });
   }
 
-  async findByDeviceId(deviceId: string): Promise<WithId<DeviceSession> | null> {
-    return deviceSessionCollection.findOne({ deviceId });
+  async findAllByUserId(userId: string): Promise<DeviceSessionDocument[]> {
+    return DeviceSessionModel.find({ userId });
   }
 
-  async findAllByUserId(userId: string): Promise<WithId<DeviceSession>[]> {
-    return deviceSessionCollection.find({ userId }).toArray();
-  }
-
-  async updateIatAndExp(deviceId: string, newIat: Date, newExp: Date): Promise<boolean> {
-    const updateResult = await deviceSessionCollection.updateOne(
-      { deviceId },
-      { $set: { iat: newIat, exp: newExp } },
-    );
-    return updateResult.matchedCount > 0;
+  async save(session: DeviceSessionDocument): Promise<void> {
+    await session.save();
   }
 
   async deleteByDeviceId(deviceId: string): Promise<boolean> {
-    const deleteResult = await deviceSessionCollection.deleteOne({ deviceId });
+    const deleteResult = await DeviceSessionModel.deleteOne({ deviceId });
     return deleteResult.deletedCount > 0;
   }
 
   async deleteAllExceptCurrent(userId: string, currentDeviceId: string): Promise<void> {
-    await deviceSessionCollection.deleteMany({
+    await DeviceSessionModel.deleteMany({
       userId,
       deviceId: { $ne: currentDeviceId },
     });

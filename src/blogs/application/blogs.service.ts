@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
-import { WithId } from 'mongodb';
 import { TYPES } from '../../composition/types';
+import { BlogDocument, BlogModel } from '../domain/blog.entity';
 import { BlogsRepository } from '../repositories/blogs.repository';
-import { Blog, BlogInputModel, BlogQueryInput } from '../types/blog';
+import { BlogInputModel, BlogQueryInput } from '../types/blog';
 import { mapBlogInputDtoToBlog } from '../utils/map-blog-input-dto-to-blog.util';
 
 @injectable()
@@ -13,24 +13,33 @@ export class BlogsService {
 
   async getBlogList(
     queryDto: BlogQueryInput,
-  ): Promise<{ items: WithId<Blog>[]; totalCount: number }> {
+  ): Promise<{ items: BlogDocument[]; totalCount: number }> {
     return this.blogsRepository.findMany(queryDto);
   }
 
-  async getBlogById(id: string): Promise<WithId<Blog> | null> {
+  async getBlogById(id: string): Promise<BlogDocument | null> {
     return this.blogsRepository.findById(id);
   }
 
-  async createBlog(dto: BlogInputModel): Promise<WithId<Blog>> {
-    const newBlog: Blog = {
+  async createBlog(dto: BlogInputModel): Promise<BlogDocument> {
+    const blog = new BlogModel({
       ...mapBlogInputDtoToBlog(dto),
       createdAt: new Date(),
-    };
-    return this.blogsRepository.create(newBlog);
+    });
+    await this.blogsRepository.save(blog);
+    return blog;
   }
 
   async updateBlog(id: string, dto: BlogInputModel): Promise<boolean> {
-    return this.blogsRepository.update(id, dto);
+    const blog = await this.blogsRepository.findById(id);
+    if (!blog) return false;
+
+    blog.name = dto.name;
+    blog.description = dto.description;
+    blog.websiteUrl = dto.websiteUrl;
+
+    await this.blogsRepository.save(blog);
+    return true;
   }
 
   async deleteBlog(id: string): Promise<boolean> {

@@ -1,10 +1,9 @@
 import { inject, injectable } from 'inversify';
-import { WithId } from 'mongodb';
 import { TYPES } from '../../composition/types';
-import { PostsRepository } from '../repositories/posts.repository';
 import { BlogsRepository } from '../../blogs/repositories/blogs.repository';
-import { Post, PostInputModel, PostQueryInput } from '../types/post';
-import { mapPostInputDtoToPost } from '../utils/map-post-input-dto-to-post.util';
+import { PostDocument, PostModel } from '../domain/post.entity';
+import { PostsRepository } from '../repositories/posts.repository';
+import { PostInputModel, PostQueryInput } from '../types/post';
 
 type PostForBlogInputBody = {
   title: string;
@@ -21,52 +20,63 @@ export class PostsService {
 
   async getPostList(
     queryDto: PostQueryInput,
-  ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
+  ): Promise<{ items: PostDocument[]; totalCount: number }> {
     return this.postsRepository.findMany(queryDto);
   }
 
   async getPostsForBlog(
     blogId: string,
     queryDto: PostQueryInput,
-  ): Promise<{ items: WithId<Post>[]; totalCount: number } | null> {
+  ): Promise<{ items: PostDocument[]; totalCount: number } | null> {
     const blog = await this.blogsRepository.findById(blogId);
     if (!blog) return null;
 
     return this.postsRepository.findManyByBlogId(blogId, queryDto);
   }
 
-  async getPostById(id: string): Promise<WithId<Post> | null> {
+  async getPostById(id: string): Promise<PostDocument | null> {
     return this.postsRepository.findById(id);
   }
 
-  async createPost(dto: PostInputModel): Promise<WithId<Post> | null> {
-    const newPostData = {
-      ...mapPostInputDtoToPost(dto),
-      createdAt: new Date(),
-    };
-    return this.postsRepository.create(newPostData);
+  async createPost(dto: PostInputModel): Promise<PostDocument | null> {
+    return this.createPostForBlog(dto.blogId, dto);
   }
 
   async createPostForBlog(
     blogId: string,
     dto: PostForBlogInputBody,
-  ): Promise<WithId<Post> | null> {
+  ): Promise<PostDocument | null> {
     const blog = await this.blogsRepository.findById(blogId);
     if (!blog) return null;
 
-    const newPostData = {
+    const post = new PostModel({
       title: dto.title,
       shortDescription: dto.shortDescription,
       content: dto.content,
       blogId,
+      blogName: blog.name,
       createdAt: new Date(),
-    };
+    });
 
-    return this.postsRepository.create(newPostData);
+    await this.postsRepository.save(post);
+    return post;
   }
 
   async updatePost(id: string, dto: PostInputModel): Promise<boolean> {
-    return this.postsRepository.update(id, dto);
+    const post = await this.postsRepository.findById(id);
+    if (!post) return false;
+
+    const blog = await this.blogsRepository.findById(dto.blogId);
+    if (!blog) return false;
+
+    post.title = dto.title;
+    post.shortDescription = dto.shortDescription;
+    post.content = dto.content;
+    post.blogId = dto.blogId;
+    post.blogName = blog.name;
+
+    await this.postsRepository.save(post);
+    return true;
   }
 
   async deletePost(id: string): Promise<boolean> {

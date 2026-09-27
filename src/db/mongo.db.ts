@@ -1,29 +1,19 @@
 import dns from 'node:dns';
-import { Db, MongoClient } from 'mongodb';
+import mongoose from 'mongoose';
 import { SETTINGS } from '../settings/config';
-import { initCollections } from './collections';
 
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 
-export let client: MongoClient;
-
 export async function runDB(url: string): Promise<void> {
-  client = new MongoClient(url);
-  const db: Db = client.db(SETTINGS.DB_NAME);
-
-  initCollections(db);
-
   try {
-    await client.connect();
-    await db.command({ ping: 1 });
-    console.log('✅ Connected to the database');
+    await mongoose.connect(url, { dbName: SETTINGS.DB_NAME });
+    console.log('✅ Connected to the database (mongoose)');
   } catch (e) {
-    await client.close();
+    await mongoose.disconnect();
     throw new Error(`❌ Database not connected: ${e}`);
   }
 }
 
-export async function stopDb() {
-  if (!client) throw new Error(`❌ No active client`);
-  await client.close();
+export async function stopDb(): Promise<void> {
+  await mongoose.disconnect();
 }

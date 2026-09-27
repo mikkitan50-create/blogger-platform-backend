@@ -1,7 +1,7 @@
-import { WithId } from 'mongodb';
-import { User, UserViewModel } from '../types/user';
+import { UserDocument } from '../domain/user.entity';
+import { UserViewModel } from '../types/user';
 
-export function mapToUserViewModel(user: WithId<User>): UserViewModel {
+export function mapToUserViewModel(user: UserDocument): UserViewModel {
   return {
     id: user._id.toString(),
     login: user.login,

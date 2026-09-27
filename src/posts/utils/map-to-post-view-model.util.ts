@@ -1,7 +1,7 @@
-import { WithId } from 'mongodb';
-import { Post, PostViewModel } from '../types/post';
+import { PostDocument } from '../domain/post.entity';
+import { PostViewModel } from '../types/post';
 
-export function mapToPostViewModel(post: WithId<Post>): PostViewModel {
+export function mapToPostViewModel(post: PostDocument): PostViewModel {
   return {
     id: post._id.toString(),
     title: post.title,

@@ -21,9 +21,12 @@ export class PasswordRecoveryService {
 
     if (user) {
       const recoveryCode = randomUUID();
-      const expirationDate = new Date(Date.now() + RECOVERY_CODE_LIFETIME_MS);
 
-      await this.usersRepository.setRecoveryCode(user._id.toString(), recoveryCode, expirationDate);
+      user.passwordRecovery = {
+        recoveryCode,
+        expirationDate: new Date(Date.now() + RECOVERY_CODE_LIFETIME_MS),
+      };
+      await this.usersRepository.save(user);
 
       this.nodemailerService
         .sendEmail(email, recoveryCode, emailExamples.passwordRecoveryEmail, 'Password recovery')
@@ -56,8 +59,9 @@ export class PasswordRecoveryService {
       };
     }
 
-    const passwordHash = await generatePasswordHash(newPassword);
-    await this.usersRepository.updatePassword(user._id.toString(), passwordHash);
+    user.passwordHash = await generatePasswordHash(newPassword);
+    user.passwordRecovery = null;
+    await this.usersRepository.save(user);
 
     return {
       status: ResultStatus.Success,

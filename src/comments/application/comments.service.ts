@@ -1,10 +1,10 @@
 import { inject, injectable } from 'inversify';
-import { WithId } from 'mongodb';
 import { TYPES } from '../../composition/types';
+import { CommentDocument, CommentModel } from '../domain/comment.entity';
 import { CommentsRepository } from '../repositories/comments.repository';
 import { PostsRepository } from '../../posts/repositories/posts.repository';
 import { UsersRepository } from '../../users/repositories/users.repository';
-import { Comment, CommentInputModel, CommentQueryInput } from '../types/comment';
+import { CommentInputModel, CommentQueryInput } from '../types/comment';
 import { Result, ResultStatus } from '../../core/types/result.type';
 
 @injectable()
@@ -18,14 +18,14 @@ export class CommentsService {
   async getCommentsForPost(
     postId: string,
     queryDto: CommentQueryInput,
-  ): Promise<{ items: WithId<Comment>[]; totalCount: number } | null> {
+  ): Promise<{ items: CommentDocument[]; totalCount: number } | null> {
     const post = await this.postsRepository.findById(postId);
     if (!post) return null;
 
     return this.commentsRepository.findManyByPostId(postId, queryDto);
   }
 
-  async getCommentById(id: string): Promise<WithId<Comment> | null> {
+  async getCommentById(id: string): Promise<CommentDocument | null> {
     return this.commentsRepository.findById(id);
   }
 
@@ -33,7 +33,7 @@ export class CommentsService {
     postId: string,
     userId: string,
     dto: CommentInputModel,
-  ): Promise<Result<WithId<Comment> | null>> {
+  ): Promise<Result<CommentDocument | null>> {
     const post = await this.postsRepository.findById(postId);
     if (!post) {
       return {
@@ -52,7 +52,7 @@ export class CommentsService {
       };
     }
 
-    const newComment: Comment = {
+    const comment = new CommentModel({
       postId,
       content: dto.content,
       commentatorInfo: {
@@ -60,14 +60,14 @@ export class CommentsService {
         userLogin: user.login,
       },
       createdAt: new Date(),
-    };
+    });
 
-    const createdComment = await this.commentsRepository.create(newComment);
+    await this.commentsRepository.save(comment);
 
     return {
       status: ResultStatus.Success,
       extensions: [],
-      data: createdComment,
+      data: comment,
     };
   }
 
@@ -93,7 +93,8 @@ export class CommentsService {
       };
     }
 
-    await this.commentsRepository.update(commentId, dto);
+    comment.content = dto.content;
+    await this.commentsRepository.save(comment);
 
     return {
       status: ResultStatus.Success,

@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { inject, injectable } from 'inversify';
-import { WithId } from 'mongodb';
 import { TYPES } from '../../composition/types';
+import { UserDocument, UserModel } from '../domain/user.entity';
 import { UsersRepository } from '../repositories/users.repository';
 import { generatePasswordHash } from '../utils/password.util';
-import { User, UserInputModel, UserQueryInput, UserViewModel } from '../types/user';
+import { UserInputModel, UserQueryInput, UserViewModel } from '../types/user';
 import { mapToUserViewModel } from '../utils/map-to-user-view-model.util';
 
 export type CreateUserResult =
@@ -19,7 +19,7 @@ export class UsersService {
 
   async getUserList(
     queryDto: UserQueryInput,
-  ): Promise<{ items: WithId<User>[]; totalCount: number }> {
+  ): Promise<{ items: UserDocument[]; totalCount: number }> {
     return this.usersRepository.findMany(queryDto);
   }
 
@@ -36,7 +36,7 @@ export class UsersService {
 
     const passwordHash = await generatePasswordHash(data.password);
 
-    const newUser: User = {
+    const user = new UserModel({
       login: data.login,
       email: data.email,
       passwordHash,
@@ -47,11 +47,11 @@ export class UsersService {
         isConfirmed: true,
       },
       passwordRecovery: null,
-    };
+    });
 
-    const createdUser = await this.usersRepository.create(newUser);
+    await this.usersRepository.save(user);
 
-    return { status: 'success', user: mapToUserViewModel(createdUser) };
+    return { status: 'success', user: mapToUserViewModel(user) };
   }
 
   async deleteUser(id: string): Promise<boolean> {
