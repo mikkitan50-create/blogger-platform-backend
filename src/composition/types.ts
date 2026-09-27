@@ -8,6 +8,7 @@ export const TYPES = {
   PostsController: Symbol.for('PostsController'),
 
   CommentsRepository: Symbol.for('CommentsRepository'),
+  CommentLikesRepository: Symbol.for('CommentLikesRepository'),
   CommentsService: Symbol.for('CommentsService'),
   CommentsController: Symbol.for('CommentsController'),
 

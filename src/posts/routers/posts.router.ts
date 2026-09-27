@@ -6,6 +6,7 @@ import { inputValidationResultMiddleware } from '../../core/middlewares/validati
 import { paginationAndSortingValidation } from '../../core/middlewares/validation/query-pagination-sorting.validation.middleware';
 import { superAdminGuardMiddleware } from '../../auth/middlewares/super-admin-guard.middleware';
 import { accessTokenGuardMiddleware } from '../../auth/middlewares/access-token-guard.middleware';
+import { optionalAccessTokenMiddleware } from '../../auth/middlewares/optional-access-token.middleware';
 import { postInputDtoValidation } from '../validation/post-input-dto.validation';
 import { commentInputDtoValidation } from '../../comments/validation/comment-input-dto.validation';
 import { PostSortField } from '../types/post-sort-field';
@@ -30,6 +31,7 @@ postsRouter
   .get(POSTS_ROUTES.BY_ID, idValidation, inputValidationResultMiddleware, postsController.getPost)
   .get(
     POSTS_ROUTES.COMMENTS_BY_POST_ID,
+    optionalAccessTokenMiddleware,
     postIdParamValidation,
     paginationAndSortingValidation(CommentSortField),
     inputValidationResultMiddleware,

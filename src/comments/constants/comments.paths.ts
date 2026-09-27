@@ -4,4 +4,5 @@ export const COMMENTS_PATH = `${API_PREFIX}/comments`;
 
 export const COMMENTS_ROUTES = {
   BY_ID: '/:commentId',
+  LIKE_STATUS: '/:commentId/like-status',
 } as const;

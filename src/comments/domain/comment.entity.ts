@@ -14,6 +14,8 @@ const commentSchema = new Schema<Comment>({
   content: { type: String, required: true },
   commentatorInfo: { type: commentatorInfoSchema, required: true },
   createdAt: { type: Date, required: true },
+  likesCount: { type: Number, required: true, min: 0, default: 0 },
+  dislikesCount: { type: Number, required: true, min: 0, default: 0 },
 });
 
 export type CommentDocument = HydratedDocument<Comment>;

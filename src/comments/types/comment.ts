@@ -1,3 +1,5 @@
+import { LikesInfoViewModel } from './comment-like';
+
 export type CommentatorInfo = {
   userId: string;
   userLogin: string;
@@ -8,6 +10,8 @@ export type Comment = {
   content: string;
   commentatorInfo: CommentatorInfo;
   createdAt: Date;
+  likesCount: number;
+  dislikesCount: number;
 };
 
 export type CommentInputModel = {
@@ -19,6 +23,7 @@ export type CommentViewModel = {
   content: string;
   commentatorInfo: CommentatorInfo;
   createdAt: string;
+  likesInfo: LikesInfoViewModel;
 };
 
 export type CommentQueryInput = {

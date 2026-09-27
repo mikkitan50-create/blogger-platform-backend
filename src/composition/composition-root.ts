@@ -10,6 +10,7 @@ import { PostsRepository } from '../posts/repositories/posts.repository';
 import { PostsService } from '../posts/application/posts.service';
 import { PostsController } from '../posts/controllers/posts.controller';
 import { CommentsRepository } from '../comments/repositories/comments.repository';
+import { CommentLikesRepository } from '../comments/repositories/comment-likes.repository';
 import { CommentsService } from '../comments/application/comments.service';
 import { CommentsController } from '../comments/controllers/comments.controller';
 import { DeviceSessionsRepository } from '../security-devices/repositories/device-sessions.repository';
@@ -38,6 +39,7 @@ container.bind<PostsService>(TYPES.PostsService).to(PostsService).inSingletonSco
 container.bind<PostsController>(TYPES.PostsController).to(PostsController).inSingletonScope();
 
 container.bind<CommentsRepository>(TYPES.CommentsRepository).to(CommentsRepository).inSingletonScope();
+container.bind<CommentLikesRepository>(TYPES.CommentLikesRepository).to(CommentLikesRepository).inSingletonScope();
 container.bind<CommentsService>(TYPES.CommentsService).to(CommentsService).inSingletonScope();
 container.bind<CommentsController>(TYPES.CommentsController).to(CommentsController).inSingletonScope();
 

@@ -8,6 +8,7 @@ import { mapToPaginatedOutput } from '../../core/utils/map-to-paginated-output.u
 import { TYPES } from '../../composition/types';
 import { CommentsService } from '../application/comments.service';
 import { CommentInputModel } from '../types/comment';
+import { LikeInputModel } from '../types/comment-like';
 import { mapToCommentViewModel } from '../utils/map-to-comment-view-model.util';
 
 @injectable()
@@ -20,19 +21,18 @@ export class CommentsController {
     try {
       const { sortBy, sortDirection, pageNumber, pageSize } = matchedData(req);
 
-      const result = await this.commentsService.getCommentsForPost(req.params.postId, {
-        sortBy,
-        sortDirection,
-        pageNumber,
-        pageSize,
-      });
+      const result = await this.commentsService.getCommentsForPost(
+        req.params.postId,
+        { sortBy, sortDirection, pageNumber, pageSize },
+        req.userId ?? null,
+      );
 
       if (!result) {
         res.sendStatus(HttpStatus.NotFound_404);
         return;
       }
 
-      const paginatedOutput = mapToPaginatedOutput(result.items.map(mapToCommentViewModel), {
+      const paginatedOutput = mapToPaginatedOutput(result.items, {
         page: pageNumber,
         pageSize,
         totalCount: result.totalCount,
@@ -46,12 +46,15 @@ export class CommentsController {
 
   getComment = async (req: Request<{ commentId: string }>, res: Response): Promise<void> => {
     try {
-      const comment = await this.commentsService.getCommentById(req.params.commentId);
+      const comment = await this.commentsService.getCommentById(
+        req.params.commentId,
+        req.userId ?? null,
+      );
       if (!comment) {
         res.sendStatus(HttpStatus.NotFound_404);
         return;
       }
-      res.status(HttpStatus.Ok_200).json(mapToCommentViewModel(comment));
+      res.status(HttpStatus.Ok_200).json(comment);
     } catch {
       res.sendStatus(HttpStatus.InternalServerError_500);
     }
@@ -106,6 +109,29 @@ export class CommentsController {
 
       if (result.status !== ResultStatus.Success) {
         res.status(resultCodeToHttpException(result.status)).send(result.extensions);
+        return;
+      }
+
+      res.sendStatus(HttpStatus.NoContent_204);
+    } catch {
+      res.sendStatus(HttpStatus.InternalServerError_500);
+    }
+  };
+
+  updateLikeStatus = async (
+    req: Request<{ commentId: string }, {}, LikeInputModel>,
+    res: Response,
+  ): Promise<void> => {
+    try {
+      const userId = req.userId as string;
+      const result = await this.commentsService.updateLikeStatus(
+        req.params.commentId,
+        userId,
+        req.body.likeStatus,
+      );
+
+      if (result.status !== ResultStatus.Success) {
+        res.sendStatus(resultCodeToHttpException(result.status));
         return;
       }
 
