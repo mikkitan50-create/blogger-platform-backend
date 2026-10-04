@@ -9,6 +9,7 @@ import { accessTokenGuardMiddleware } from '../../auth/middlewares/access-token-
 import { optionalAccessTokenMiddleware } from '../../auth/middlewares/optional-access-token.middleware';
 import { postInputDtoValidation } from '../validation/post-input-dto.validation';
 import { commentInputDtoValidation } from '../../comments/validation/comment-input-dto.validation';
+import { likeInputDtoValidation } from '../../comments/validation/like-input-dto.validation';
 import { PostSortField } from '../types/post-sort-field';
 import { CommentSortField } from '../../comments/types/comment-sort-field';
 import { container } from '../../composition/composition-root';
@@ -24,11 +25,18 @@ export const postsRouter = Router({});
 postsRouter
   .get(
     POSTS_ROUTES.ROOT,
+    optionalAccessTokenMiddleware,
     paginationAndSortingValidation(PostSortField),
     inputValidationResultMiddleware,
     postsController.getPostList,
   )
-  .get(POSTS_ROUTES.BY_ID, idValidation, inputValidationResultMiddleware, postsController.getPost)
+  .get(
+    POSTS_ROUTES.BY_ID,
+    optionalAccessTokenMiddleware,
+    idValidation,
+    inputValidationResultMiddleware,
+    postsController.getPost,
+  )
   .get(
     POSTS_ROUTES.COMMENTS_BY_POST_ID,
     optionalAccessTokenMiddleware,
@@ -51,6 +59,14 @@ postsRouter
     commentInputDtoValidation,
     inputValidationResultMiddleware,
     commentsController.createCommentForPost,
+  )
+  .put(
+    POSTS_ROUTES.LIKE_STATUS,
+    accessTokenGuardMiddleware,
+    postIdParamValidation,
+    likeInputDtoValidation,
+    inputValidationResultMiddleware,
+    postsController.updateLikeStatus,
   )
   .put(
     POSTS_ROUTES.BY_ID,

@@ -6,6 +6,7 @@ import { blogIdParamValidation } from '../../core/middlewares/validation/blog-id
 import { inputValidationResultMiddleware } from '../../core/middlewares/validation/input-validation-result.middleware';
 import { paginationAndSortingValidation } from '../../core/middlewares/validation/query-pagination-sorting.validation.middleware';
 import { superAdminGuardMiddleware } from '../../auth/middlewares/super-admin-guard.middleware';
+import { optionalAccessTokenMiddleware } from '../../auth/middlewares/optional-access-token.middleware';
 import { blogInputDtoValidation } from '../validation/blog-input-dto.validation';
 import { postInputDtoForBlogValidation } from '../../posts/validation/post-input-dto-for-blog.validation';
 import { BlogSortField } from '../types/blog-sort-field';
@@ -31,6 +32,7 @@ blogsRouter
   .get(BLOGS_ROUTES.BY_ID, idValidation, inputValidationResultMiddleware, blogsController.getBlog)
   .get(
     BLOGS_ROUTES.POSTS_BY_BLOG_ID,
+    optionalAccessTokenMiddleware,
     blogIdParamValidation,
     paginationAndSortingValidation(PostSortField),
     inputValidationResultMiddleware,

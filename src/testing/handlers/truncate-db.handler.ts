@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { HttpStatus } from '../../core/types/http-statuses';
 import { BlogModel } from '../../blogs/domain/blog.entity';
 import { PostModel } from '../../posts/domain/post.entity';
+import { PostLikeModel } from '../../posts/domain/post-like.entity';
 import { UserModel } from '../../users/domain/user.entity';
 import { CommentModel } from '../../comments/domain/comment.entity';
 import { CommentLikeModel } from '../../comments/domain/comment-like.entity';
@@ -13,6 +14,7 @@ export async function truncateDbHandler(req: Request, res: Response) {
     await Promise.all([
       BlogModel.deleteMany({}),
       PostModel.deleteMany({}),
+      PostLikeModel.deleteMany({}),
       UserModel.deleteMany({}),
       CommentModel.deleteMany({}),
       CommentLikeModel.deleteMany({}),

@@ -7,6 +7,7 @@ import { UsersRepository } from '../users/repositories/users.repository';
 import { UsersService } from '../users/application/users.service';
 import { UsersController } from '../users/controllers/users.controller';
 import { PostsRepository } from '../posts/repositories/posts.repository';
+import { PostLikesRepository } from '../posts/repositories/post-likes.repository';
 import { PostsService } from '../posts/application/posts.service';
 import { PostsController } from '../posts/controllers/posts.controller';
 import { CommentsRepository } from '../comments/repositories/comments.repository';
@@ -35,6 +36,7 @@ container.bind<UsersService>(TYPES.UsersService).to(UsersService).inSingletonSco
 container.bind<UsersController>(TYPES.UsersController).to(UsersController).inSingletonScope();
 
 container.bind<PostsRepository>(TYPES.PostsRepository).to(PostsRepository).inSingletonScope();
+container.bind<PostLikesRepository>(TYPES.PostLikesRepository).to(PostLikesRepository).inSingletonScope();
 container.bind<PostsService>(TYPES.PostsService).to(PostsService).inSingletonScope();
 container.bind<PostsController>(TYPES.PostsController).to(PostsController).inSingletonScope();
 

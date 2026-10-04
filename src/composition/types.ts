@@ -4,6 +4,7 @@ export const TYPES = {
   BlogsController: Symbol.for('BlogsController'),
 
   PostsRepository: Symbol.for('PostsRepository'),
+  PostLikesRepository: Symbol.for('PostLikesRepository'),
   PostsService: Symbol.for('PostsService'),
   PostsController: Symbol.for('PostsController'),
 

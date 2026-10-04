@@ -1,3 +1,5 @@
+import { ExtendedLikesInfoViewModel } from './post-like';
+
 export type Post = {
   title: string;
   shortDescription: string;
@@ -5,6 +7,8 @@ export type Post = {
   blogId: string;
   blogName: string;
   createdAt: Date;
+  likesCount: number;
+  dislikesCount: number;
 };
 
 export type PostInputModel = {
@@ -22,6 +26,7 @@ export type PostViewModel = {
   blogId: string;
   blogName: string;
   createdAt: string;
+  extendedLikesInfo: ExtendedLikesInfoViewModel;
 };
 
 export type PostQueryInput = {
